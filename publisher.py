@@ -44,6 +44,10 @@ class Publisher:
                     self.send_users_by_topic(message, conn)
                 elif command == "get_users":
                     self.send_all_users(conn)
+                elif command == "get_tcp_ip":
+                    self.send_tcp_ip(message, conn)
+                elif command == "get_udp_port":
+                    self.send_udp_port(message, conn)
 
         print(f"Connection closed for {addr}")
 
@@ -83,8 +87,29 @@ class Publisher:
             conn.sendall(json.dumps([]).encode())
 
     def send_all_users(self, conn: socket.socket):
-        usernames = list(self.users.keys())
-        conn.sendall(json.dumps(usernames).encode())
+        users_info = [
+            {
+                'username': user.username,
+            }
+            for user in self.users.values()
+        ]
+        conn.sendall(json.dumps(users_info).encode())
+    
+    def send_tcp_ip(self, message: Dict, conn: socket.socket):
+        target_username = message["username"]
+        user = self.users.get(target_username)
+        if user:
+            conn.sendall(json.dumps({"tcp_ip": user.tcp_ip}).encode())
+        else:
+            conn.sendall(json.dumps({"error": "User not found"}).encode())
+
+    def send_udp_port(self, message: Dict, conn: socket.socket):
+        target_username = message["username"]
+        user = self.users.get(target_username)
+        if user:
+            conn.sendall(json.dumps({"udp_port": user.udp_port}).encode())
+        else:
+            conn.sendall(json.dumps({"error": "User not found"}).encode())
 
     def start_server(self, host='127.0.0.1', port=65432):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:
