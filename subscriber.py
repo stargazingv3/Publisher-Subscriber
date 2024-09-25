@@ -50,9 +50,28 @@ class Client:
             message = {"command": "get_users"}
             tcp_socket.sendall(json.dumps(message).encode())
             data = tcp_socket.recv(1024)
-            users = json.loads(data.decode())
-            print("All Users:")
-            print(users)
+            users_info = json.loads(data.decode())
+            print("All users:")
+            for user in users_info:
+                print(f"Username: {user['username']}")
+
+    def request_user_attribute(self, command, target_username):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
+            tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
+            message = {"command": command, "username": target_username}
+            tcp_socket.sendall(json.dumps(message).encode())
+            data = tcp_socket.recv(1024)
+            user_info = json.loads(data.decode())
+            if 'error' not in user_info:
+                print(f"{command} for {target_username}: {user_info}")
+                return user_info
+            else:
+                print(user_info['error'])
+
+    def get_user_info(self, target_username):
+        tcp_ip = self.request_user_attribute("get_tcp_ip", target_username)['tcp_ip']
+        udp_port = self.request_user_attribute("get_udp_port", target_username)['udp_port']
+        return tcp_ip, udp_port
 
     def subscribe_topic(self, topic_name):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
@@ -75,30 +94,15 @@ class Client:
             tcp_socket.sendall(json.dumps(message).encode())
             print(f"Created topic: {topic_name}")
 
-    def get_user_udp_info(self, target_username):
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
-            tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
-            message = {"command": "get_users"}
-            tcp_socket.sendall(json.dumps(message).encode())
-            data = tcp_socket.recv(1024)
-            user_info = json.loads(data.decode())
-            for user in user_info:
-                print("User Info: ", user)
-                if user['username'] == target_username:
-                    udp_info = user
-                    print(f"{target_username} UDP info: {udp_info}")
-                    return udp_info
-            #else:
-            print(f"{target_username} not found.")
-            print(user_info)
-
     def message_user(self, target_username, message):
-        udp_info = self.get_user_udp_info(target_username)
-        if udp_info:
-            target_ip = udp_info['tcp_ip']
-            target_port = udp_info['udp_port']
-            self.udp_socket.sendto(message.encode(), (target_ip, target_port))
+        tcp_ip, udp_port = self.get_user_info(target_username)
+        if tcp_ip and udp_port:
+            #print("Message to send: ", type(message))
+            self.udp_socket.sendto(message.encode(), (tcp_ip, udp_port))
             print(f"Sent message to {target_username}: {message}")
+        else:
+            print("TCP: ", tcp_ip, "UDP: \n", udp_port)
+            print(f"Could not send message to {target_username}, user info not found.")
 
 
     def run(self):
