@@ -83,8 +83,15 @@ class Publisher:
             conn.sendall(json.dumps([]).encode())
 
     def send_all_users(self, conn: socket.socket):
-        usernames = list(self.users.keys())
-        conn.sendall(json.dumps(usernames).encode())
+        users_info = [
+            {
+                'username': user.username,
+                'tcp_ip': user.tcp_ip,
+                'udp_port': user.udp_port
+            }
+            for user in self.users.values()
+        ]
+        conn.sendall(json.dumps(users_info).encode())
 
     def start_server(self, host='127.0.0.1', port=65432):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server_socket:

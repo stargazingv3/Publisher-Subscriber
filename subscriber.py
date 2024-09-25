@@ -82,12 +82,16 @@ class Client:
             tcp_socket.sendall(json.dumps(message).encode())
             data = tcp_socket.recv(1024)
             user_info = json.loads(data.decode())
-            if target_username in user_info:
-                udp_info = user_info[target_username]
-                print(f"{target_username} UDP info: {udp_info}")
-                return udp_info
-            else:
-                print(f"{target_username} not found.")
+            
+            # Assume user_info is a list of dictionaries, each containing username and UDP info
+            if isinstance(user_info, list):
+                for user in user_info:
+                    if user['username'] == target_username:
+                        print("User Info: \n", user_info)
+                        udp_info = user  # The whole dictionary for that user
+                        print(f"{target_username} UDP info: {udp_info}")
+                        return udp_info
+            print(f"{target_username} not found.")
 
     def message_user(self, target_username, message):
         udp_info = self.get_user_udp_info(target_username)
@@ -96,6 +100,7 @@ class Client:
             target_port = udp_info['udp_port']
             self.udp_socket.sendto(message.encode(), (target_ip, target_port))
             print(f"Sent message to {target_username}: {message}")
+
 
     def run(self):
         while True:
