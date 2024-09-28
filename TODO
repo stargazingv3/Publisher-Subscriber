@@ -1,0 +1,27 @@
+Publisher:
+   • If a message is added to a topic, broadcast that message to subscribers of the list other than sender
+   • Only clients subscribed to a topic can publish to said topic
+
+Subscriber:
+   • Have a 2nd thread which listens and outputs messsages received through UDP
+   • Create and bind to an available (unique) UDP port which is sent to Publisher when registering
+
+Both:
+   • Modify function names and parameter syntax to:
+        • REGISTER: REGISTER <username> <client-host> <UDP port>
+        • LIST TOPICS: LIST TOPICS
+        • LIST USERS: LIST USERS
+        • CREATE TOPIC: CREATE TOPIC <topic_name>
+        • SUBSCRIBE: SUB <topic_name>
+        • PUBLISH: PUB <topic_name> <message>
+        • GET DM INFO: GET-DM-INFO <username> # client program will send this to the server when the
+        next command is processed
+        • DM USER: DM <username> <message>
+
+Would-be Nice Features:
+    • Unique usernames for registration
+    • Users shouldn't be able to subscribe to topics that don't exist
+        • Server sends error message
+
+Brushup
+    • Modify the list users output so all users are on 1 line
