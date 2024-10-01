@@ -38,6 +38,8 @@ class Publisher:
                     self.create_topic(message)
                 elif command == "subscribe":
                     self.subscribe_topic(message)
+                elif command == "publish_message":
+                    self.publish_message(message)
                 elif command == "get_topics":
                     self.send_topics(conn)
                 elif command == "get_users_by_topic":
@@ -73,6 +75,29 @@ class Publisher:
             self.topics[topic_name].subscribers.append(username)
             self.users[username].subscribed_topics.append(topic_name)
             print(f"{username} subscribed to {topic_name}")
+        
+    def publish_message(self, message: Dict):
+        username = message["username"]
+        topic_name = message["topic"]
+        msg_content = message["content"]
+
+        if topic_name in self.topics:
+            print(f"Broadcasting message from {username} to topic {topic_name}: {msg_content}")
+            subscribers = self.topics[topic_name].subscribers
+            for subcriber in subscribers:
+                if subcriber != username:
+                    self.send_message_to_user(subcriber, msg_content)
+
+    def send_message_to_user(self, username: str, msg_content: str):
+        user = self.users.get(username)
+        if user:
+            try:
+                message = json.dumps({"topic": "broadcast", "content": msg_content}).encode()
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    s.connect((user.tcp_ip, user.udp_port))
+                    s.sendall(message)
+            except Exception as e:
+                print(f"Error sending message to {username}: {e}")
 
     def send_topics(self, conn: socket.socket):
         topics_list = list(self.topics.keys())

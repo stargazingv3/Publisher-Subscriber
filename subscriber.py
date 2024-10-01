@@ -1,14 +1,31 @@
 import socket
 import json
+import threading
 
 class Client:
-    def __init__(self, username, udp_port=8888):
+    def __init__(self, username):
         self.username = username
-        self.udp_port = udp_port
+        self.udp_port = self.get_unique_udp_port()
+        self.client_host = socket.gethostbyname(socket.gethostname())
         self.tcp_server_ip = '127.0.0.1'
         self.tcp_server_port = 65432
         self.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.udp_socket.bind(('', self.udp_port))
+        self.start_udp_listner()
         self.register()
+
+    def get_unique_udp_port(self):
+        return 8888
+
+    def start_udp_listner(self):
+        listener_thread = threading.Thread(target=self.listen_for_messages, daemon=True)
+        listener_thread.start()
+
+    def listen_for_messages(self):
+        while True:
+            message, addr = self.udp_socket.recvfrom(1024)
+            decoded_message = message.decode()
+            print(f"Recieved message: {decoded_message} from {addr}")
 
     def register(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
@@ -19,7 +36,7 @@ class Client:
                 "udp_port": self.udp_port
             }
             tcp_socket.sendall(json.dumps(message).encode())
-            print(f"Registered as {self.username}")
+            print(f"Registered as {self.username} on client host {self.client_host} on UDP port {self.udp_port}")
 
     def request_topics(self):
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
@@ -108,35 +125,44 @@ class Client:
     def run(self):
         while True:
             print("\nMenu:")
-            print("1. Request list of topics")
-            print("2. Subscribe to a topic")
-            print("3. Create a topic")
-            print("4. List users subscribed to a topic")
-            print("5. List all users")
-            print("6. Message another user")
-            print("7. Exit")
+            print("1. LIST TOPICS")
+            print("2. LIST USERS")
+            print("3. CREATE TOPIC")
+            print("4. SUB")
+            print("5. PUBLISH")
+            print("6. GET DM INFO")
+            print("7. DM USER")
+            print("8. LIST USER SUBED TO TOPIC")
+            print("9. Exit")
             choice = input("Select an option: ")
 
             if choice == "1":
                 self.request_topics()
             elif choice == "2":
-                topic_name = input("Enter topic name to subscribe: ")
-                self.subscribe_topic(topic_name)
+                self.list_users()
             elif choice == "3":
                 topic_name = input("Enter topic name to create: ")
                 self.create_topic(topic_name)
             elif choice == "4":
-                topic_name = input("Enter topic name to list users: ")
-                self.get_users_by_topic(topic_name)
-            elif choice == "5":
-                self.list_users()
-            elif choice == "6":
+                topic_name = input("Enter topic name to subscribe: ")
+                self.subscribe_topic(topic_name)
+            #elif choice == "5":
+            #   Pubmessage = input("Enter your message: ")
+            #   self.publish_message(Pubmessage)
+            #elif choice == "6":
+            #    target_username_info = input("Enter the username to get there info ")
+            #    self.get_info(target_username_info)
+            elif choice == "7":
                 target_username = input("Enter the username to message: ")
                 message = input("Enter your message: ")
                 self.message_user(target_username, message)
-            elif choice == "7":
+            elif choice == "8":
+                topic_name = input("Enter topic name to list users: ")
+                self.get_users_by_topic(topic_name)
+            elif choice == "9":
                 print("Exiting...")
                 break
+
             else:
                 print("Invalid option. Please try again.")
 
