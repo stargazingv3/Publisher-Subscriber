@@ -121,6 +121,19 @@ class Client:
             print("TCP: ", tcp_ip, "UDP: \n", udp_port)
             print(f"Could not send message to {target_username}, user info not found.")
 
+    def publish_message(self, topic_name):
+        message_content = input("Enter the meassage you would like to be published: ")
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
+            tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
+            message = {
+                "command": "publish_message",
+                "username": self.username,
+                "topic": topic_name,
+                "content": message_content
+            }
+            tcp_socket.sendall(json.dumps(message).encode())
+            print(f"Published message to {topic_name}: {message_content}")
+
 
     def run(self):
         while True:
@@ -146,12 +159,12 @@ class Client:
             elif choice == "4":
                 topic_name = input("Enter topic name to subscribe: ")
                 self.subscribe_topic(topic_name)
-            #elif choice == "5":
-            #   Pubmessage = input("Enter your message: ")
-            #   self.publish_message(Pubmessage)
-            #elif choice == "6":
-            #    target_username_info = input("Enter the username to get there info ")
-            #    self.get_info(target_username_info)
+            elif choice == "5":
+               topic_name = input("Enter the topic you wish to publish about: ")
+               self.publish_message(topic_name)
+            elif choice == "6":
+                target_username_info = input("Enter the username whose info you wish to recieve ")
+                self.get_user_info(target_username_info)
             elif choice == "7":
                 target_username = input("Enter the username to message: ")
                 message = input("Enter your message: ")
