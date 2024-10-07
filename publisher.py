@@ -27,7 +27,7 @@ class Publisher:
 
     #handles incoming connections from clients, listens for commands sent by client 
     def handle_client(self, conn: socket.socket, addr: tuple):
-        print(f"Connection from {addr}")
+        #print(f"Connection from {addr}")
         with conn:
             while True:
                 data = conn.recv(1024)
@@ -58,7 +58,7 @@ class Publisher:
                 elif command == "get_udp_port":
                     self.send_udp_port(message, conn)
 
-        print(f"Connection closed for {addr}")
+        #print(f"Connection closed for {addr}")
 
     #registers a new user by extracting username IP and Port num storing ingo in users dictonary
     def register_user(self, message: Dict, conn: socket.socket):
