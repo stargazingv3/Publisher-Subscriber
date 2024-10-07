@@ -63,7 +63,7 @@ class Publisher:
     #registers a new user by extracting username IP and Port num storing ingo in users dictonary
     def register_user(self, message: Dict, conn: socket.socket):
         username = message["username"]
-        tcp_ip = conn.getsockname()[0]
+        tcp_ip = message["ip"]#conn.getsockname()[0]
         udp_port = message["udp_port"]
 
         user = User(username=username, tcp_ip=tcp_ip, udp_port=udp_port)

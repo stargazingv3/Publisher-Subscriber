@@ -36,15 +36,37 @@ class Client:
 
     #connects to server through TCP and sends reg messg with username and UDP 
     def register(self):
+        # Get the local IP address of the client
+        client_host = socket.gethostbyname(socket.gethostname())
+        
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
             tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
             message = {
                 "command": "register",
                 "username": self.username,
+                "ip": client_host,  # Use the current IP by default
                 "udp_port": self.udp_port
             }
             tcp_socket.sendall(json.dumps(message).encode())
-            print(f"Registered as {self.username} on client host {self.client_host} on UDP port {self.udp_port}")
+            print(f"Registered as {self.username} on client host {client_host} on UDP port {self.udp_port}")
+
+    # allows user to explicitly register with a specified username, IP, and UDP port
+    def explicit_register(self):
+        username = input("Enter your desired username: ")
+        ip = input("Enter your IP address: ")
+        udp_port = int(input("Enter your UDP port: "))
+        
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as tcp_socket:
+            tcp_socket.connect((self.tcp_server_ip, self.tcp_server_port))
+            message = {
+                "command": "register",
+                "username": username,
+                "ip": ip,  # Include the IP address in the message
+                "udp_port": udp_port
+            }
+            tcp_socket.sendall(json.dumps(message).encode())
+            print(f"Registered as {username} on IP {ip} on UDP port {udp_port}")
+
 
     #sends request to server for available topics and prints them 
     def request_topics(self):
@@ -157,45 +179,47 @@ class Client:
     def run(self):
         while True:
             print("\nMenu:")
-            print("1. LIST TOPICS")
-            print("2. LIST USERS")
-            print("3. CREATE TOPIC")
-            print("4. SUB")
-            print("5. PUBLISH")
-            print("6. GET DM INFO")
-            print("7. DM USER")
-            print("8. LIST USER SUBED TO TOPIC")
-            print("9. Exit")
+            print("1. REGISTER")
+            print("2. LIST TOPICS")
+            print("3. LIST USERS")
+            print("4. CREATE TOPIC")
+            print("5. SUB")
+            print("6. PUBLISH")
+            print("7. GET DM INFO")
+            print("8. DM USER")
+            print("9. LIST USER SUBED TO TOPIC")
+            print("10. Exit")
             choice = input("Select an option: ")
 
             #whatever choice they choose it calls the function to perform the users desire
             if choice == "1":
+                self.explicit_register()
+            if choice == "2":
                 self.request_topics()
-            elif choice == "2":
-                self.list_users()
             elif choice == "3":
+                self.list_users()
+            elif choice == "4":
                 topic_name = input("Enter topic name to create: ")
                 self.create_topic(topic_name)
-            elif choice == "4":
+            elif choice == "5":
                 topic_name = input("Enter topic name to subscribe: ")
                 self.subscribe_topic(topic_name)
-            elif choice == "5":
+            elif choice == "6":
                topic_name = input("Enter the topic you wish to publish about: ")
                self.publish_message(topic_name)
-            elif choice == "6":
+            elif choice == "7":
                 target_username_info = input("Enter the username whose info you wish to recieve ")
                 self.get_user_info(target_username_info)
-            elif choice == "7":
+            elif choice == "8":
                 target_username = input("Enter the username to message: ")
                 message = input("Enter your message: ")
                 self.message_user(target_username, message)
-            elif choice == "8":
+            elif choice == "9":
                 topic_name = input("Enter topic name to list users: ")
                 self.get_users_by_topic(topic_name)
-            elif choice == "9":
+            elif choice == "10":
                 print("Exiting...")
                 break
-
             else:
                 print("Invalid option. Please try again.")
 
