@@ -85,6 +85,8 @@ class Publisher:
             self.topics[topic_name].subscribers.append(username)
             self.users[username].subscribed_topics.append(topic_name)
             print(f"{username} subscribed to {topic_name}")
+        else:
+            print(f"invalid topic not in list")
         
     #brodcasts a mssg from a user to all other subs of a specified topic
     def publish_message(self, message: Dict):
@@ -98,19 +100,22 @@ class Publisher:
             subscribers = self.topics[topic_name].subscribers
             for subcriber in subscribers:
                 if subcriber != username:
-                    self.send_message_to_user(subcriber, msg_content)
+                    self.send_message_to_user(subcriber, msg_content, topic_name)
 
     #sends a mssg to a specific user of another users choosing using a new socket connection
-    def send_message_to_user(self, username: str, msg_content: str):
+    def send_message_to_user(self, username: str, msg_content: str, topic_name: str):
         user = self.users.get(username)
         if user:
             try:
-                message = json.dumps({"topic": "broadcast", "content": msg_content}).encode()
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                    s.connect((user.tcp_ip, user.udp_port))
-                    s.sendall(message)
+                message = json.dumps({topic_name: "broadcast", "content": msg_content}).encode()
+                self.send_udp_message(user.tcp_ip, user.udp_port, message) #calls send_udp_message to send the mssg transfering the data to class
             except Exception as e:
                 print(f"Error sending message to {username}: {e}")
+
+    #sends the published mssg to all users useing UDP 
+    def send_udp_message(self, ip: str, port: int, message: bytes):
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:     #sends as UDP
+            s.sendto(message, (ip, port))
 
     #sends list of abailable topics to the client 
     def send_topics(self, conn: socket.socket):

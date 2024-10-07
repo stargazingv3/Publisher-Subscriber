@@ -16,9 +16,11 @@ class Client:
         self.start_udp_listner() #calls fuction that that listens for UDP mssgs
         self.register() #registers user that just signed in
 
-    #gets 8888 to assign to the UDP_port num
+    #retruns available port number picked by OS
     def get_unique_udp_port(self):
-        return 8888
+        sock = socket.socket()
+        sock.bind(('', 0))
+        return sock.getsockname()[1] 
 
     #starts new thread for listening for UDP mssgs 
     def start_udp_listner(self):
@@ -112,6 +114,7 @@ class Client:
             }
             tcp_socket.sendall(json.dumps(message).encode())
             print(f"Subscribed to {topic_name}")
+           
 
     #sends request to create new topic
     def create_topic(self, topic_name):
